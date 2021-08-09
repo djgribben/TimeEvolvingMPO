@@ -55,7 +55,7 @@ class TempoParameters(BaseAPIClass):
         Number of time steps :math:`K\in\mathbb{N}` that should be included in
         the non-Markovian memory. - It must be large
         enough such that :math:`\delta t \times K` is larger than the
-        necessary memory time :math:`\tau_\mathrm{cut}`.
+        neccessary memory time :math:`\tau_\mathrm{cut}`.
     epsrel: float
         The maximal relative error in the singular value truncation (done
         in the underlying tensor network algorithm). - It must be small enough
@@ -149,11 +149,11 @@ class Tempo(BaseAPIClass):
     system: BaseSystem
         The system.
     bath: Bath
-        The Bath (includes the coupling operator to the system).
+        The Bath (includes the coupling operator to the sytem).
     parameters: TempoParameters
         The parameters for the TEMPO computation.
     initial_state: ndarray
-        The initial density matrix of the system.
+        The initial density matrix of the sytem.
     start_time: float
         The start time.
     backend: str (default = None)
@@ -362,7 +362,7 @@ class Tempo(BaseAPIClass):
             end_time: float,
             progress_type: Text = None) -> Dynamics:
         """
-        Propagate (or continue to propagate) the TEMPO tensor network to
+        Propagate (or continue to propagete) the TEMPO tensor network to
         time `end_time`.
 
         Parameters
@@ -452,37 +452,37 @@ def _analyse_correlation(
 
 def _estimate_epsrel(
         dkmax: int,
-        tolerance: float) -> float:
+        tollerance: float) -> float:
     """Heuristic estimation of appropriate epsrel for TEMPO."""
-    power = np.log(dkmax)/np.log(4)-np.log(tolerance)/np.log(10)
+    power = np.log(dkmax)/np.log(4)-np.log(tollerance)/np.log(10)
     return np.power(10,-power)
 
 GUESS_WARNING_MSG = "Estimating parameters for TEMPO computation. " \
-    + "No guarantee that resulting TEMPO computation converges towards " \
+    + "No guarantie that resulting TEMPO computation converges towards " \
     + "the correct dynamics! " \
-    + "Please refer to the TEMPO documentation and check convergence by " \
+    + "Please refere to the TEMPO documentation and check convergence by " \
     + "varying the parameters for TEMPO manually."
 
 MAX_DKMAX_WARNING_MSG = f"Reached maximal recommended `dkmax` ({MAX_DKMAX})! " \
     + "Interrupt TEMPO parameter estimation. "\
-    + "Please choose a lower tolerance, or analyse the correlation function " \
+    + "Please choose a lower tollerance, or analyse the correlation function " \
     + "to choose TEMPO parameters manually. " \
-    + "Could not reach specified tolerance! "
+    + "Could not reach specified tollerance! "
 
 def guess_tempo_parameters(
         bath: Bath,
         start_time: float,
         end_time: float,
         system: Optional[BaseSystem] = None,
-        tolerance: Optional[float] = DEFAULT_TOLLERANCE) -> TempoParameters:
+        tollerance: Optional[float] = DEFAULT_TOLLERANCE) -> TempoParameters:
     """
     Function to roughly estimate appropriate parameters for a TEMPO
     computation.
 
     .. warning::
 
-        No guarantee that resulting TEMPO calculation converges towards the
-        correct dynamics! Please refer to the TEMPO documentation and check
+        No guarantie that resulting TEMPO calculation converges towards the
+        correct dynamics! Please refere to the TEMPO documentation and check
         convergence by varying the parameters for TEMPO manually.
 
     Parameters
@@ -495,13 +495,13 @@ def guess_tempo_parameters(
         The time to which the TEMPO should be computed.
     system: BaseSystem
         The system.
-    tolerance: float
-        Tolerance for the parameter estimation.
+    tollerance: float
+        Tollerance for the parameter estimation.
 
     Returns
     -------
     tempo_parameters : TempoParameters
-        Estimate of appropriate tempo parameters.
+        Estimate of appropropriate tempo parameters.
     """
     assert isinstance(bath, Bath), \
         "Argument 'bath' must be a time_evolving_mpo.Bath object."
@@ -515,11 +515,11 @@ def guess_tempo_parameters(
     assert isinstance(system, (type(None), BaseSystem)), \
         "Argument 'system' must be 'None' or a time_evolving_mpo.BaseSystem object."
     try:
-        __tolerance = float(tolerance)
+        __tollerance = float(tollerance)
     except Exception as e:
-        raise AssertionError("Argument 'tolerance' must be float.") from e
-    assert __tolerance > 0.0, \
-        "Argument 'tolerance' must be larger then 0."
+        raise AssertionError("Argument 'tollerance' must be float.") from e
+    assert __tollerance > 0.0, \
+        "Argument 'tollerance' must be larger then 0."
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
     print("WARNING: "+GUESS_WARNING_MSG, file=sys.stderr, flush=True)
 
@@ -541,18 +541,18 @@ def guess_tempo_parameters(
         corr_vals = new_corr_vals
         new_times, new_corr_vals, errors, integrals = \
                 _analyse_correlation(corr_func, times, corr_vals)
-        cut = np.where(integrals>(1-tolerance))[0][0]
+        cut = np.where(integrals>(1-tollerance))[0][0]
         cut = cut+2 if cut+2<=len(times) else len(times)
         times = times[:cut]
         corr_vals = corr_vals[:cut]
         new_times = new_times[:2*cut-1]
         new_corr_vals = new_corr_vals[:2*cut-1]
-        if (errors < tolerance).all():
+        if (errors < tollerance).all():
             break
 
     dt = np.min(times[1:] - times[:-1])
     dkmax = len(times)
-    epsrel = _estimate_epsrel(dkmax, tolerance)
+    epsrel = _estimate_epsrel(dkmax, tollerance)
     sys.stderr.flush()
 
     return TempoParameters(
@@ -561,7 +561,7 @@ def guess_tempo_parameters(
         epsrel=epsrel,
         name="Roughly estimated parameters",
         description="Estimated with 'guess_tempo_parameters()'",
-        description_dict={"tolerance":tolerance})
+        description_dict={"tollerance":tollerance})
 
 
 def tempo_compute(
@@ -571,7 +571,7 @@ def tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[TempoParameters] = None,
-        tolerance: Optional[float] = DEFAULT_TOLLERANCE,
+        tollerance: Optional[float] = DEFAULT_TOLLERANCE,
         backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
@@ -579,24 +579,24 @@ def tempo_compute(
         description: Optional[Text] = None,
         description_dict: Optional[Dict] = None) -> Dynamics:
     """
-    Shortcut for creating a Tempo object and running the computation.
+    Shortcut for creating a Tempo object and runing the computation.
 
     Parameters
     ----------
     system: BaseSystem
         The system.
     bath: Bath
-        The Bath (includes the coupling operator to the system).
+        The Bath (includes the coupling operator to the sytem).
     initial_state: ndarray
-        The initial density matrix of the system.
+        The initial density matrix of the sytem.
     start_time: float
         The start time.
     end_time: float
         The time to which the TEMPO should be computed.
     parameters: TempoParameters
         The parameters for the TEMPO computation.
-    tolerance: float
-        Tolerance for the parameter estimation (only applicable if
+    tollerance: float
+        Tollerance for the parameter estimation (only applicable if
         `parameters` is None).
     backend: str (default = None)
         The name of the backend to use for the computation. If `backend` is
@@ -616,14 +616,14 @@ def tempo_compute(
         An optional dictionary with descriptive data.
     """
     if parameters is None:
-        assert tolerance is not None, \
-            "If 'parameters' is 'None' then 'tolerance' must be " \
+        assert tollerance is not None, \
+            "If 'parameters' is 'None' then 'tollerance' must be " \
             + "a positive float."
         parameters = guess_tempo_parameters(bath=bath,
                                             start_time=start_time,
                                             end_time=end_time,
                                             system=system,
-                                            tolerance=tolerance)
+                                            tollerance=tollerance)
     tempo = Tempo(system,
                   bath,
                   parameters,
