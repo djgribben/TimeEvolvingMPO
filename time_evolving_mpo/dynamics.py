@@ -20,6 +20,7 @@ from copy import copy
 
 import numpy as np
 from numpy import ndarray
+from scipy.integrate import cumtrapz
 
 from time_evolving_mpo.base_api import BaseAPIClass
 from time_evolving_mpo.config import NpDtype, NpDtypeReal
@@ -67,6 +68,8 @@ class Dynamics(BaseAPIClass):
         self._states = []
         self._expectation_operators = []
         self._expectation_lists = []
+        self._bath_expectation_modes = []
+        self._bath_expectation_lists = []
         self._shape = None
         for time, state in zip(times, states):
             self.add(time, state)
@@ -175,6 +178,63 @@ class Dynamics(BaseAPIClass):
                "states": self.states}
         assert_tempo_dynamics_dict(dyn)
         save_object(dyn, filename, overwrite)
+    
+    def bath_expectation(
+            self,
+            modes: Optional[ndarray] = None,
+            coupling_operator: Optional[ndarray] = None,
+            spectral_density: Optional[callable] = lambda x: 1,
+            dispersion: Optional[callable] = lambda x: abs(x)
+            ) -> Tuple[ndarray,ndarray]:
+        r"""
+        
+
+        Parameters
+        ----------
+        operator : Optional[string], optional
+            DESCRIPTION. The default is "ad".
+
+        Returns
+        -------
+        Tuple[ndarray,ndarray]
+            DESCRIPTION.
+
+        """
+        if len(self) == 0:
+            return None, None
+        times,sys_expectation = self.expectations(coupling_operator)
+        
+        if modes is None:
+            __modes = np.array([1])
+        else:
+            try:
+                __modes = np.array(modes, dtype=float)
+            except Exception as e:
+                raise AssertionError("Argument `modes` must be list of floats.") \
+                    from e
+        new_modes = [i for i in __modes \
+                     if i not in self._bath_expectation_modes]
+        self._bath_expectation_modes += list(new_modes)
+        
+        try:
+            __freqs = dispersion(np.array(new_modes))
+        except Exception as e:
+            raise AssertionError("Argument `dispersion` must be a vectorized callable.") \
+                from e
+        
+        couplings = [spectral_density(i)**0.5 for i in __freqs]
+        bath_expectation_lists = []
+        for i, m in enumerate(__freqs):
+            out = np.append([0],cumtrapz(sys_expectation*np.exp(1j*m*times),times))
+            bath_expectation_list = -1j*np.exp(-1j*m*times)*out*couplings[i]
+            bath_expectation_lists.append(bath_expectation_list)
+            self._bath_expectation_lists.append(bath_expectation_list)
+        self._bath_expectation_modes,self._bath_expectation_lists=zip(*sorted(zip(self._bath_expectation_modes,self._bath_expectation_lists)))
+        self._bath_expectation_modes,self._bath_expectation_lists =\
+            list(self._bath_expectation_modes),list(self._bath_expectation_lists)
+        return times, bath_expectation_lists
+            
+    
 
     def expectations(
             self,
