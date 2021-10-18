@@ -114,7 +114,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         return correlation
 
     
-    def _calc_kernel(freq_1: float,
+    def _calc_kernel(self,
+                    freq_1: float,
                     time_1: float,
                     freq_2: float,
                     time_2: float,
@@ -139,14 +140,39 @@ class TwoTimeBathCorrelations(BaseAPIClass):
 
         Returns
         -------
-        real_kernel : ndarray
+        re_kernel : ndarray
             An array that multiplies the real part of the system correlation 
             functions before being summed.
-        imag_kernel : ndarray
+        im_kernel : ndarray
             An array that multiplies the imaginary part of the system
             correlation functions before being summed.
 
         '''
-        return None,None
+        dt = self.process_tensor._parameters.dt
+        
+        def bose_einstein(w,T):
+            if T == 0:
+                return 0
+            return np.exp(-w/T)/(1-np.exp(-w/T))
+        def phase(i,j):
+            return np.exp(-1j*((2*dagg[0]-1)*freq_1*i+(2*dagg[1]-1)*freq_2*j)*dt)
+        ker_dim = int(np.floor(time_1/dt))
+        switch = int(np.floor(time_2/dt))
+        re_kernel = np.zeros((ker_dim,ker_dim),dtype=NpDtype)
+        im_kernel = np.zeros((ker_dim,ker_dim),dtype=NpDtype)
+        tpp_index,tp_index = np.meshgrid(np.arange(ker_dim),np.arange(ker_dim),
+                                      indexing='ij')
+        n_1,n_2 = bose_einstein(freq_1,self.bath.correlations.temperature),\
+                      bose_einstein(freq_2,self.bath.correlations.temperature)
+        if dagg == (0,1):
+            re_kernel[:switch,:] = -phase(tp_index[:switch,:],tpp_index[:switch,:])
+            re_kernel[:switch,switch:] -= phase(tpp_index[:switch,switch:],tp_index[:switch,switch:])
+            re_kernel = np.triu(re_kernel)
+            
+            im_kernel[:switch,:switch] = -(2*n_1+1)*phase(tpp_index[:switch,:switch],tp_index[:switch,:switch])
+            im_kernel[:switch,:] += (2*n_2+1)*phase(tp_index[:switch,:],tpp_index[:switch,:])
+            im_kernel[switch:,switch:] = 2*(n_2+1)*phase(tp_index[:switch,switch:],tpp_index[:switch,switch:])
+            im_kernel = np.triu(im_kernel)
+        return re_kernel,im_kernel
         
     
