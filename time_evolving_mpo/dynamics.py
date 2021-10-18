@@ -179,26 +179,22 @@ class Dynamics(BaseAPIClass):
         assert_tempo_dynamics_dict(dyn)
         save_object(dyn, filename, overwrite)
     
-    def bath_expectation(
-            self,
-            modes: Optional[ndarray] = None,
-            coupling_operator: Optional[ndarray] = None,
-            spectral_density: Optional[callable] = lambda x: 1,
-            dispersion: Optional[callable] = lambda x: abs(x)
-            ) -> Tuple[ndarray,ndarray]:
+    def ladder_expectation(self,modes: Optional[ndarray] = None,
+                           sys_expectation: Optional[ndarray] = None) -> Tuple[ndarray,ndarray]:
         r"""
         
-
+    
         Parameters
         ----------
-        operator : Optional[string], optional
-            DESCRIPTION. The default is "ad".
-
+        modes: ndarray (default = None)
+            Frequencies at which to calculate expectation of ladder operator.
+        sys_expectation: ndarray (default = None)
+    
         Returns
         -------
         Tuple[ndarray,ndarray]
             DESCRIPTION.
-
+    
         """
         if len(self) == 0:
             return None, None
@@ -208,9 +204,9 @@ class Dynamics(BaseAPIClass):
             __modes = np.array([1])
         else:
             try:
-                __modes = np.array(modes, dtype=float)
+                __modes = np.array(modes, dtype=NpDtypeReal)
             except Exception as e:
-                raise AssertionError("Argument `modes` must be list of floats.") \
+                raise AssertionError("Argument `modes` must be list of real floats.") \
                     from e
         new_modes = [i for i in __modes \
                      if i not in self._bath_expectation_modes]
@@ -233,8 +229,6 @@ class Dynamics(BaseAPIClass):
         self._bath_expectation_modes,self._bath_expectation_lists =\
             list(self._bath_expectation_modes),list(self._bath_expectation_lists)
         return times, bath_expectation_lists
-            
-    
 
     def expectations(
             self,
