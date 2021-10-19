@@ -11,6 +11,7 @@ from copy import copy
 import numpy as np
 from numpy import ndarray
 from scipy.integrate import cumtrapz
+from operator import itemgetter
 
 from time_evolving_mpo.base_api import BaseAPIClass
 from time_evolving_mpo.process_tensor import ProcessTensor
@@ -50,7 +51,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         self._system = system
         self._bath = bath
         self._process_tensor = process_tensor
-        
+        self._system_correlations = np.array([[]],dtype=NpDtype)
         super().__init__(name, description, description_dict)
     
     @property
@@ -99,18 +100,27 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         correlation : complex
             Bath correlation function <a^{dagg[0]}_{freq_1} (time_1) a^{dagg[1]}_{freq_2} (time_2)>
         '''
+        dt = self.process_tensor._parameters.dt
+        corr_mat_dim = time_1/dt
+        current_corr_dim = self._system_correlations.shape[0]
         if time_2 is None:
             time_2 = time_1
         assert time_2 <= time_1, \
             "The argument time_1 must be greater than or equal to time_2"
         if freq_2 is None:
             freq_2 = freq_1
-        correlation_set = [(y,x) for y in range(int(np.floor(time_1/self.process_tensor._parameters.dt))) for x in range(y+1)]
+        correlation_set = [(x,y) for y in range(current_corr_dim,corr_mat_dim)\
+                           for x in range(y+1)]
         re_kernel,im_kernel = self._calc_kernel(freq_1,time_1,freq_2,time_2,dagg)
-        
-        sys_correlations = self.process_tensor.calc_correlations(self.bath.coupling_operator,correlation_set)
-        
-        correlation = sys_correlations.real*re_kernel+1j*sys_correlations.imag*im_kernel
+        if len(correlation_set>0):
+            _new_sys_correlations = self.process_tensor.calc_correlations(self.bath.coupling_operator,correlation_set)
+            self._system_correlations = np.pad(self._system_correlations,((0,corr_mat_dim-current_corr_dim),
+                                                                          (0,corr_mat_dim-current_corr_dim)))
+            for n,i in enumerate(correlation_set):
+                self._system_correlations[i] = _new_sys_correlations[n]
+
+        _sys_correlations = self._system_correlations[:corr_mat_dim,:corr_mat_dim]
+        correlation = np.sum(_sys_correlations.real*re_kernel+1j*_sys_correlations.imag*im_kernel)*dt**2
         return correlation
 
     
