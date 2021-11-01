@@ -78,17 +78,20 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         Bath properties
         """
         return self._bath
-    def bath_energy(self,
-                    freq: float):
+    def bath_occupation(self,
+                    freq: float,
+                    dw: Optional[float] = 1.0):
         r"""
+        Function to calculate the change in bath occupation in a particular 
+        bandwidth.
         
         Parameters
         ----------
         freq : float
-            DESCRIPTION.
-        times : List[float]
-            DESCRIPTION.
-
+            Frequency about which to calculate the change in occupation.
+        dw : tuple (default = (1.0,1.0)):
+            Bandwidth of about the frequency to calculate the energy within. By
+            default what is returned by this method is a *density*.
         Returns
         -------
         times : List[float]
@@ -114,19 +117,23 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         last_time = self._process_tensor.times[-1]
         re_kernel,im_kernel = self._calc_kernel(freq,last_time,
                                                 freq,last_time,(1,0))
-        
+        coup = self._bath.correlations.spectral_density(freq)*dw
         bath_energy = np.diag(np.cumsum(np.cumsum(_sys_correlations.real*re_kernel+\
-                             1j*_sys_correlations.imag*im_kernel,axis=0),axis=1)).real*0.1**2
+                             1j*_sys_correlations.imag*im_kernel,axis=0),axis=1)).real*coup
         bath_energy = np.append([0],bath_energy)
-        return bath_energy
+        return self._process_tensor.times, bath_energy
         
     def correlation(self,
                     freq_1: float,
                     time_1: float,
                     freq_2: Optional[float] = None,
                     time_2: Optional[float] = None,
+                    dw: Optional[tuple] = (1.0,1.0),
                     dagg: Optional[tuple] = (1,0)):
         r"""
+        Function to calculate two-time correlation function between to frequency
+        bands of a bath.
+        
         Parameters
         ----------
         freq_1 : float
@@ -139,6 +146,10 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         time_2 : float (default = None)
             Time the earlier operator acts. If set to None will default to
             time_2=time_1.
+        dw : tuple (default = (1.0,1.0)):
+            Bandwidth of about each frequency comparing correlations between. 
+            By default what is returned by this method is a correlation 
+            *density*.
         dagg : Optional[tuple] (default = (1,0))
             Determines whether each operator is daggered or not e.g. (1,0)
             would correspond to < a^\dagger a >
@@ -175,8 +186,11 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                                                       :corr_mat_dim]
         re_kernel,im_kernel = self._calc_kernel(freq_1,time_1,
                                                 freq_2,time_2,dagg)
+        coup_1 = dw[0]*self._bath.correlations.spectral_density(freq_1)**0.5
+        coup_2 = dw[1]*self._bath.correlations.spectral_density(freq_2)**0.5
         correlation = np.sum(_sys_correlations.real*re_kernel+\
-                             1j*_sys_correlations.imag*im_kernel)*0.1**2*dt**2
+                             1j*_sys_correlations.imag*im_kernel)*\
+            coup_1*coup_2*dt**2
         return correlation
 
     def _calc_kernel(self,
