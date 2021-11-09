@@ -824,7 +824,7 @@ def compute_dynamics_from_system(
         __dt = float(dt)
     except Exception as e:
         raise AssertionError("Time step 'dt' must be a float.") from e
-
+    print(start_time)
     try:
         __start_time = float(start_time)
     except Exception as e:

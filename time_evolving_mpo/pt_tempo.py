@@ -338,13 +338,9 @@ def pt_tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[PtTempoParameters] = None,
-<<<<<<< HEAD
-        tollerance: Optional[float] = PT_DEFAULT_TOLLERANCE,
         process_tensor_file: Optional[Union[Text, bool]] = None,
         overwrite: Optional[bool] = False,
-=======
         tolerance: Optional[float] = PT_DEFAULT_TOLLERANCE,
->>>>>>> 004f8eb97624102d29d59604f5457fb0eb59d6bb
         backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
