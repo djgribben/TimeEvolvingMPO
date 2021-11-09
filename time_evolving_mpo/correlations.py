@@ -53,7 +53,7 @@ class BaseCorrelations(BaseAPIClass):
         tau : ndarray
             Time difference :math:`\tau`
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -96,7 +96,7 @@ class BaseCorrelations(BaseAPIClass):
         Parameters
         ----------
         delta : float
-            Length of integration intevals.
+            Length of integration intervals.
         time_1 : float
             Lower bound of integration interval of :math:`dt'`.
         time_2 : float
@@ -106,7 +106,7 @@ class BaseCorrelations(BaseAPIClass):
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -165,7 +165,7 @@ class CustomCorrelations(BaseCorrelations):
     correlation_function : callable
         The correlation function :math:`C`.
     max_correlation_time : float
-        The maximal occuring correlation time :math:`\tau_\mathrm{max}`.
+        The maximal occurring correlation time :math:`\tau_\mathrm{max}`.
     name: str
         An optional name for the correlations.
     description: str
@@ -224,7 +224,7 @@ class CustomCorrelations(BaseCorrelations):
         tau : ndarray
             Time difference :math:`\tau`
         epsrel : float
-            Relative error tollerance (has no effect here).
+            Relative error tolerance (has no effect here).
         subdiv_limit : int
             Maximal number of interval subdivisions for numerical integration
             (has no effect here).
@@ -268,7 +268,7 @@ class CustomCorrelations(BaseCorrelations):
         Parameters
         ----------
         delta : float
-            Length of integration intevals.
+            Length of integration intervals.
         time_1 : float
             Lower bound of integration interval of :math:`dt'`.
         time_2 : float
@@ -278,7 +278,7 @@ class CustomCorrelations(BaseCorrelations):
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -295,7 +295,7 @@ class CustomCorrelations(BaseCorrelations):
             time_2 = time_1 + delta
         else:
             assert shape == 'rectangle', \
-                "paramter 'time_2' can only be used in conjunction with " \
+                "parameter 'time_2' can only be used in conjunction with " \
                 "'shape' = ``rectangle`` !"
 
         lower_boundary = {'square': lambda x: 0.0,
@@ -549,7 +549,7 @@ class CustomSD(BaseCorrelations):
     temperature: float
         The environment's temperature.
     max_correlation_time : float
-        The maximal occuring correlation time :math:`\tau_\mathrm{max}`.
+        The maximal occurring correlation time :math:`\tau_\mathrm{max}`.
     name: str
         An optional name for the correlations.
     description: str
@@ -659,10 +659,8 @@ class CustomSD(BaseCorrelations):
         ----------
         tau : ndarray
             Time difference :math:`\tau`
-        epsrel : float (default = 1.49e-08)
-            Relative error tollerance.
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -735,7 +733,7 @@ class CustomSD(BaseCorrelations):
         Parameters
         ----------
         delta : float
-            Length of integration intevals.
+            Length of integration intervals.
         time_1 : float
             Lower bound of integration interval of :math:`dt'`.
         time_2 : float
@@ -745,7 +743,7 @@ class CustomSD(BaseCorrelations):
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -830,7 +828,7 @@ class PowerLawSD(CustomSD):
     Parameters
     ----------
     alpha : float
-        The coupling strenght :math:`\alpha`.
+        The coupling strength :math:`\alpha`.
     zeta : float
         The exponent :math:`\zeta` (corresponds to the dimensionality of the
         environment). The environment is called *ohmic* if :math:`\zeta=1`,
@@ -843,7 +841,7 @@ class PowerLawSD(CustomSD):
     temperature: float
         The environment's temperature.
     max_correlation_time : float
-        The maximal occuring correlation time :math:`\tau_\mathrm{max}`.
+        The maximal occurring correlation time :math:`\tau_\mathrm{max}`.
     name: str
         An optional name for the correlations.
     description: str

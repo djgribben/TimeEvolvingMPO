@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for utillities.
+Module for utilities.
 """
 
 import sys
@@ -142,7 +142,7 @@ def load_object(filename: Text) -> Any:
         return pickle.load(file)
 
 
-# -- progess bar --------------------------------------------------------------
+# -- process bar --------------------------------------------------------------
 
 class BaseProgress:
     """Base class to display computation progress. """
@@ -283,6 +283,6 @@ def get_progress(progress_type: Text = None) -> BaseProgress:
     if progress_type is None:
         progress_type = PROGRESS_TYPE
     assert progress_type in PROGRESS_DICT, \
-        "Unknown progess_type='{}', know are {}".format(
+        "Unknown progress_type='{}', know are {}".format(
             progress_type, PROGRESS_DICT.keys())
     return PROGRESS_DICT[progress_type]

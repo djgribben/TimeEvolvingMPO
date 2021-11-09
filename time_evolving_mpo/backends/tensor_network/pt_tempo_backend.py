@@ -23,7 +23,10 @@ from numpy import ndarray
 from time_evolving_mpo.backends.tensor_network import node_array as na
 from time_evolving_mpo.backends.base_backends import BasePtTempoBackend
 from time_evolving_mpo.config import NpDtype
+<<<<<<< HEAD
 from time_evolving_mpo.process_tensor import BaseProcessTensor
+=======
+>>>>>>> 004f8eb97624102d29d59604f5457fb0eb59d6bb
 from time_evolving_mpo import util
 
 
