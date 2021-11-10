@@ -865,13 +865,17 @@ def compute_dynamics_from_system(
 
 
 def _compute_dynamics(
-        process_tensor: BaseProcessTensor,
+        process_tensors: List[BaseProcessTensor],
         controls: Callable[[int], Tuple[ndarray, ndarray]],
         initial_state: Optional[ndarray] = None,
         num_steps: Optional[int] = None,
         record_all: Optional[bool] = True) -> List[ndarray]:
     """See BaseProcessTensorBackend.compute_dynamics() for docstring. """
-    hs_dim = process_tensor.hilbert_space_dimension
+    hs_dims = [pt.hilbert_space_dimension for pt in process_tensors]
+    assert len(set(hs_dims))==1, \
+        "All process tensors must be defined for same system Hilbert space."
+        
+    hs_dim = hs_dims[0]
 
     initial_tensor = process_tensor.get_initial_tensor()
     assert (initial_state is None) ^ (initial_tensor is None), \
