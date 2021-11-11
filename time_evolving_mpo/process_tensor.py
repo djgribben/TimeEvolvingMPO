@@ -871,13 +871,17 @@ def _compute_dynamics(
         num_steps: Optional[int] = None,
         record_all: Optional[bool] = True) -> List[ndarray]:
     """See BaseProcessTensorBackend.compute_dynamics() for docstring. """
+    process_tensors = list(process_tensors)
     hs_dims = [pt.hilbert_space_dimension for pt in process_tensors]
+    lens = [len(pt) for pt in process_tensors]
     assert len(set(hs_dims))==1, \
         "All process tensors must be defined for same system Hilbert space."
+    assert len(set(lens))==1, \
+        "All process tensors must be the same length."
         
     hs_dim = hs_dims[0]
 
-    initial_tensor = process_tensor.get_initial_tensor()
+    initial_tensor = process_tensors[0].get_initial_tensor()
     assert (initial_state is None) ^ (initial_tensor is None), \
         "Initial state must be either (exclusively) encoded in the " \
         + "process tensor or given as an argument."
@@ -891,28 +895,27 @@ def _compute_dynamics(
     states = []
 
     if num_steps is None:
-        __num_steps = len(process_tensor)
+        __num_steps = lens[0]
     else:
         __num_steps = num_steps
-
-    for step in range(__num_steps):
-        if record_all:
-            # -- extract current state --
-            try:
-                cap = process_tensor.get_cap_tensor(step)
-            except Exception as e:
-                raise ValueError("There are either no cap tensors in the "\
-                        +"process tensor or the process tensor is not "\
-                        +"long enough") from e
-            if cap is None:
-                raise ValueError("Process tensor has no cap tensor "\
-                    +f"for step {step}.")
-            cap_node = tn.Node(cap)
-            node_dict, edge_dict = tn.copy([current])
-            edge_dict[current_bond_leg] ^ cap_node[0]
-            state_node = node_dict[current] @ cap_node
-            state = state_node.get_tensor().reshape(hs_dim, hs_dim)
-            states.append(state)
+    if record_all:
+        try:
+            cap = process_tensors[0].get_cap_tensor(0)
+        except Exception as e:
+            raise ValueError("There are either no cap tensors in the "\
+                    +"process tensor or the process tensor is not "\
+                    +"long enough") from e
+        if cap is None:
+            raise ValueError("Process tensor has no cap tensor "\
+                +"for step 0.")
+        cap_node = tn.Node(cap)
+        node_dict, edge_dict = tn.copy([current])
+        edge_dict[current_bond_leg] ^ cap_node[0]
+        state_node = node_dict[current] @ cap_node
+        state = state_node.get_tensor().reshape(hs_dim, hs_dim)
+        states.append(state)
+        
+    for step in range(1,__num_steps):
 
         # -- propagate one time step --
         try:
@@ -922,6 +925,8 @@ def _compute_dynamics(
         if mpo is None:
             raise ValueError("Process tensor has no mpo tensor "\
                 +f"for step {step}.")
+        # -- combine multiple process tensors --
+        
         mpo_node = tn.Node(mpo)
         pre, post = controls(step)
         pre_node = tn.Node(pre)
@@ -947,6 +952,23 @@ def _compute_dynamics(
             current_state_leg = post_node[1]
             current = current @ pre_node @ mpo_node @ lam_node @ post_node
 
+        if record_all:
+            # -- extract current state --
+            try:
+                cap = process_tensors[0].get_cap_tensor(step)
+            except Exception as e:
+                raise ValueError("There are either no cap tensors in the "\
+                        +"process tensor or the process tensor is not "\
+                        +"long enough") from e
+            if cap is None:
+                raise ValueError("Process tensor has no cap tensor "\
+                    +f"for step {step}.")
+            cap_node = tn.Node(cap)
+            node_dict, edge_dict = tn.copy([current])
+            edge_dict[current_bond_leg] ^ cap_node[0]
+            state_node = node_dict[current] @ cap_node
+            state = state_node.get_tensor().reshape(hs_dim, hs_dim)
+            states.append(state)
     # -- extract last state --
     cap = process_tensor.get_cap_tensor(__num_steps)
     if cap is None:
